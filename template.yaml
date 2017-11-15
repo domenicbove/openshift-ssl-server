@@ -67,7 +67,6 @@ objects:
           volumeMounts:
             - name: keystore-volume
               mountPath: /var/run/secrets/java.io/keystores
-        dnsPolicy: ClusterFirst
         initContainers:
         - name: pem-to-keystore
           image: registry.access.redhat.com/redhat-sso-7/sso71-openshift:latest
@@ -89,16 +88,12 @@ objects:
               mountPath: /var/run/secrets/java.io/keystores
             - name: service-certs
               mountPath: /var/run/secrets/openshift.io/services_serving_certs
-        restartPolicy: Always
-        schedulerName: default-scheduler
-        securityContext: {}
         volumes:
           - name: keystore-volume
             emtpyDir: {}
           - name: service-certs
             secret:
               secretName: ${APPLICATION_NAME}-service-certs
-    test: false
     triggers:
     - imageChangeParams:
         automatic: true
@@ -128,7 +123,6 @@ objects:
   kind: Service
   metadata:
     annotations:
-      openshift.io/generated-by: OpenShiftWebConsole
       service.alpha.openshift.io/serving-cert-secret-name: ${APPLICATION_NAME}-service-certs
     labels:
       app: ${APPLICATION_NAME}
@@ -141,9 +135,6 @@ objects:
       targetPort: 8443
     selector:
       deploymentconfig: ${APPLICATION_NAME}
-    type: ClusterIP
-  status:
-    loadBalancer: {}
 parameters:
 - name: APPLICATION_NAME
   description: The name for the application.
