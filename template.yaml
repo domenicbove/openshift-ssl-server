@@ -23,8 +23,8 @@ objects:
     strategy:
       sourceStrategy:
         from:
-          kind: ImageStreamTag
-          name: openjdk18-openshift:latest
+          kind: DockerImage
+          name: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
       type: Source
 - apiVersion: v1
   kind: ImageStream
@@ -125,7 +125,6 @@ objects:
       app: ${APPLICATION_NAME}
     name: ${APPLICATION_NAME}
   spec:
-    host: ${APPLICATION_NAME}-quicktest.snapshot.mservices.fismobile.net
     port:
       targetPort: 8443-tcp
     tls:
@@ -168,4 +167,5 @@ parameters:
 - name: APPLICATION_NAME
   description: The name for the application.
   displayName: Application name
+  value: ssl-server
   required: true
