@@ -1,8 +1,11 @@
 # OpenShift Image Scanner
 
-To build image
+To create OCP objects:
 ```
 oc process -f template.yml | oc create -f -
+```
+To build and run the image:
+```
 mvn clean package
 oc start-build ssl-server --from-file=target/ssl-server-0.0.1-SNAPSHOT.jar
 ```
