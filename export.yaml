@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: java-template
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APPLICATION_NAME}:latest
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      binary: {}
+      type: Binary
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: openjdk18-openshift:latest
+      type: Source
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: ${APPLICATION_NAME}
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: ${APPLICATION_NAME}
+          deploymentconfig: ${APPLICATION_NAME}
+      spec:
+        containers:
+        - image: ${APPLICATION_NAME}
+          imagePullPolicy: Always
+          name: ${APPLICATION_NAME}
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          - containerPort: 8443
+            protocol: TCP
+          - containerPort: 8778
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - name: keystore-volume
+              mountPath: /var/run/secrets/java.io/keystores
+        dnsPolicy: ClusterFirst
+        initContainers:
+        - name: pem-to-keystore
+          image: registry.access.redhat.com/redhat-sso-7/sso71-openshift:latest
+          env:
+            - name: keyfile
+              value: /var/run/secrets/openshift.io/services_serving_certs/tls.key
+            - name: crtfile
+              value: /var/run/secrets/openshift.io/services_serving_certs/tls.crt
+            - name: keystore_pkcs12
+              value: /var/run/secrets/java.io/keystores/keystore.pkcs12
+            - name: keystore_jks
+              value: /var/run/secrets/java.io/keystores/keystore.jks
+            - name: password
+              value: changeit
+          command: ['/bin/bash']
+          args: ['-c', "openssl pkcs12 -export -inkey $keyfile -in $crtfile -out $keystore_pkcs12 -password pass:$password && keytool -importkeystore -noprompt -srckeystore $keystore_pkcs12 -srcstoretype pkcs12 -destkeystore $keystore_jks -storepass $password -srcstorepass $password"]
+          volumeMounts:
+            - name: keystore-volume
+              mountPath: /var/run/secrets/java.io/keystores
+            - name: service-certs
+              mountPath: /var/run/secrets/openshift.io/services_serving_certs
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+          - name: keystore-volume
+            emtpyDir: {}
+          - name: service-certs
+            secret:
+              secretName: ${APPLICATION_NAME}-service-certs
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APPLICATION_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APPLICATION_NAME}:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    host: ${APPLICATION_NAME}-quicktest.snapshot.mservices.fismobile.net
+    port:
+      targetPort: 8443-tcp
+    tls:
+      termination: reencrypt
+    to:
+      kind: Service
+      name: ${APPLICATION_NAME}
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+      service.alpha.openshift.io/serving-cert-secret-name: ${APPLICATION_NAME}-service-certs
+    labels:
+      app: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: 8443-tcp
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    - name: 8778-tcp
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    selector:
+      deploymentconfig: ${APPLICATION_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+parameters:
+- name: APPLICATION_NAME
+  description: The name for the application.
+  displayName: Application name
+  required: true
