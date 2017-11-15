@@ -18,14 +18,17 @@ objects:
     resources: {}
     runPolicy: Serial
     source:
-      binary: {}
-      type: Binary
+      git:
+        uri: "https://github.com/domenicbove/openshift-ssl-server"
+        ref: "master"
     strategy:
       sourceStrategy:
         from:
           kind: DockerImage
           name: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift
       type: Source
+    triggers:
+    - type: ConfigChange
 - apiVersion: v1
   kind: ImageStream
   metadata:

@@ -1,4 +1,4 @@
-# OpenShift Image Scanner
+# OpenShift SSL Server
 
 To create OCP objects:
 ```
