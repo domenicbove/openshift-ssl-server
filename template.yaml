@@ -42,37 +42,25 @@ objects:
     replicas: 1
     selector:
       deploymentconfig: ${APPLICATION_NAME}
-    strategy:
-      activeDeadlineSeconds: 21600
-      resources: {}
-      rollingParams:
-        intervalSeconds: 1
-        maxSurge: 25%
-        maxUnavailable: 25%
-        timeoutSeconds: 600
-        updatePeriodSeconds: 1
-      type: Rolling
     template:
       metadata:
-        creationTimestamp: null
         labels:
           app: ${APPLICATION_NAME}
           deploymentconfig: ${APPLICATION_NAME}
       spec:
         containers:
-        - image: ${APPLICATION_NAME}
+        - name: ${APPLICATION_NAME}
+          image: ${APPLICATION_NAME}
           imagePullPolicy: Always
-          name: ${APPLICATION_NAME}
+          env:
+            - name: keystore_jks
+              value: /var/run/secrets/java.io/keystores/keystore.jks
+            - name: password
+              value: changeit
           ports:
-          - containerPort: 8080
-            protocol: TCP
           - containerPort: 8443
             protocol: TCP
-          - containerPort: 8778
-            protocol: TCP
           resources: {}
-          terminationMessagePath: /dev/termination-log
-          terminationMessagePolicy: File
           volumeMounts:
             - name: keystore-volume
               mountPath: /var/run/secrets/java.io/keystores
@@ -101,7 +89,6 @@ objects:
         restartPolicy: Always
         schedulerName: default-scheduler
         securityContext: {}
-        terminationGracePeriodSeconds: 30
         volumes:
           - name: keystore-volume
             emtpyDir: {}
@@ -145,21 +132,12 @@ objects:
     name: ${APPLICATION_NAME}
   spec:
     ports:
-    - name: 8080-tcp
-      port: 8080
-      protocol: TCP
-      targetPort: 8080
     - name: 8443-tcp
       port: 8443
       protocol: TCP
       targetPort: 8443
-    - name: 8778-tcp
-      port: 8778
-      protocol: TCP
-      targetPort: 8778
     selector:
       deploymentconfig: ${APPLICATION_NAME}
-    sessionAffinity: None
     type: ClusterIP
   status:
     loadBalancer: {}
