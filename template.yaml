@@ -69,7 +69,7 @@ objects:
               mountPath: /var/run/secrets/java.io/keystores
         initContainers:
         - name: pem-to-keystore
-          image: registry.access.redhat.com/redhat-sso-7/sso71-openshift:latest
+          image: registry.access.redhat.com/redhat-sso-7/sso71-openshift:1.1-16
           env:
             - name: keyfile
               value: /var/run/secrets/openshift.io/services_serving_certs/tls.key
