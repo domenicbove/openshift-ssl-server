@@ -17,45 +17,47 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 public class SslServerApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(SslServerApplication.class, args);
-	}
-	
-	@Bean
-	public EmbeddedServletContainerFactory servletContainer() {
-	  TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory() {
-	      @Override
-	      protected void postProcessContext(Context context) {
-	        SecurityConstraint securityConstraint = new SecurityConstraint();
-	        securityConstraint.setUserConstraint("CONFIDENTIAL");
-	        SecurityCollection collection = new SecurityCollection();
-	        collection.addPattern("/*");
-	        securityConstraint.addCollection(collection);
-	        context.addConstraint(securityConstraint);
-	      }
-	    };
-	  
-	  tomcat.addAdditionalTomcatConnectors(redirectConnector());
-	  return tomcat;
-	}
+    public static void main(String[] args) {
+	SpringApplication.run(SslServerApplication.class, args);
+    }
 
-	private Connector redirectConnector() {
-	  Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-	  connector.setScheme("http");
-	  connector.setPort(8080);
-	  connector.setSecure(false);
-	  connector.setRedirectPort(8443);
-	  
-	  return connector;
-	}
+//    @Bean
+//    public EmbeddedServletContainerFactory servletContainer() {
+//	TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory() {
+//	    @Override
+//	    protected void postProcessContext(Context context) {
+//		SecurityConstraint securityConstraint = new SecurityConstraint();
+//		securityConstraint.setUserConstraint("CONFIDENTIAL");
+//		SecurityCollection collection = new SecurityCollection();
+//		collection.addPattern("/*");
+//		securityConstraint.addCollection(collection);
+//		context.addConstraint(securityConstraint);
+//	    }
+//	};
+//
+//	tomcat.addAdditionalTomcatConnectors(redirectConnector());
+//	return tomcat;
+//    }
+//
+//    private Connector redirectConnector() {
+//	Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
+//	connector.setScheme("http");
+//	connector.setPort(8080);
+//	connector.setSecure(false);
+//	connector.setRedirectPort(8443);
+//
+//	return connector;
+//    }
+    
 }
+
 @RestController
 class SecuredServerController{
-	
-	@RequestMapping("/secured")
-	public String secured(){
-		System.out.println("Inside secured()");
-		return "Hello user !!! : " + new Date();
-	}
+
+    @RequestMapping("/secured")
+    public String secured(){
+	System.out.println("Inside secured()");
+	return "Hello user !!! : " + new Date();
+    }
 }
 
