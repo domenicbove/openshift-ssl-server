@@ -54,7 +54,6 @@ objects:
         containers:
         - name: ${APPLICATION_NAME}
           image: ${APPLICATION_NAME}
-          imagePullPolicy: Always
           env:
             - name: keystore_jks
               value: /var/run/secrets/java.io/keystores/keystore.jks
